@@ -59,7 +59,7 @@ const pebblenetOptions: Options = {
   hdPath: makeCosmoshubPath(0),
   defaultKeyFile: path.join(process.env.HOME, ".pebblenet.key"),
   fees: {
-    upload: calculateFee(1500000, pebblenetGasPrice),
+    upload: calculateFee(2000000, pebblenetGasPrice),
     init: calculateFee(500000, pebblenetGasPrice),
     exec: calculateFee(200000, pebblenetGasPrice),
   },
@@ -167,11 +167,11 @@ interface ProposalListResponse {
   readonly proposals: ProposalResponse[];
 }
 
-enum Vote {
-  yes = "yes",
-  no = "no",
-  abstain = "abstain",
-  veto = "veto",
+class Vote {
+  public static YES = "yes"
+  public static NO = "no"
+  public static ABSTAIN = "abstain"
+  public static VETO = "veto"
 }
 
 interface VoteInfo {
@@ -181,7 +181,7 @@ interface VoteInfo {
 }
 
 interface VoteResponse {
-  readonly vote?: VoteInfo;
+  readonly vote: VoteInfo;
 }
 
 interface VoteListResponse {
@@ -281,7 +281,7 @@ interface CW3FlexInstance {
 
   // actions
   propose: (txSigner: string, description: string, msgs: CosmosMsg[], latest?: Expiration) => Promise<string>
-  vote: (txSigner: string, proposalId: number, vote: Vote) => Promise<string>
+  vote: (txSigner: string, proposalId: number, v: Vote) => Promise<string>
   execute: (txSigner: string, proposalId: number) => Promise<string>
   close: (txSigner: string, proposalId: number) => Promise<string>
   // should be triggered by other contract, use for testing

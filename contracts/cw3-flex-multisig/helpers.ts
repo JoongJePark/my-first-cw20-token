@@ -167,16 +167,9 @@ interface ProposalListResponse {
   readonly proposals: ProposalResponse[];
 }
 
-class Vote {
-  public static YES = "yes"
-  public static NO = "no"
-  public static ABSTAIN = "abstain"
-  public static VETO = "veto"
-}
-
 interface VoteInfo {
   readonly voter: string;
-  readonly vote: Vote;
+  readonly vote: string;
   readonly weight: number;
 }
 
@@ -215,55 +208,6 @@ interface MemberChangedHookMsg {
   readonly diffs: MemberDiff[];
 }
 
-type CosmosMsg = SendMsg | DelegateMsg | UndelegateMsg | RedelegateMsg | WithdrawMsg | any
-
-interface SendMsg {
-  readonly bank: {
-    readonly send: {
-      readonly from_address: string,
-      readonly to_address: string,
-      readonly amount: readonly Coin[],
-    }
-  }
-}
-
-interface DelegateMsg {
-  readonly staking: {
-    readonly delegate: {
-      readonly validator: string,
-      readonly amount: Coin,
-    }
-  }
-}
-
-interface UndelegateMsg {
-  readonly staking: {
-    readonly undelegate: {
-      readonly validator: string,
-      readonly amount: Coin,
-    }
-  }
-}
-
-interface RedelegateMsg {
-  readonly staking: {
-    readonly redelegate: {
-      readonly src_validator: string,
-      readonly dst_validator: string,
-      readonly amount: Coin,
-    }
-  }
-}
-
-interface WithdrawMsg {
-  readonly staking: {
-    readonly withdraw: {
-      readonly validator: string,
-      readonly recipient?: string,
-    }
-  }
-}
-
 type Expiration = { readonly at_height: number } | { readonly at_time: number } | { readonly never: {} };
 
 interface CW3FlexInstance {
@@ -280,8 +224,8 @@ interface CW3FlexInstance {
   listVoters: (startAfter?: string, limit?: number) => Promise<VoterListResponse>
 
   // actions
-  propose: (txSigner: string, description: string, msgs: CosmosMsg[], latest?: Expiration) => Promise<string>
-  vote: (txSigner: string, proposalId: number, v: Vote) => Promise<string>
+  propose: (txSigner: string, title: string, description: string, msgs: any[], latest?: Expiration) => Promise<string>
+  vote: (txSigner: string, proposalId: number, vote: string, latest?: Expiration) => Promise<string>
   execute: (txSigner: string, proposalId: number) => Promise<string>
   close: (txSigner: string, proposalId: number) => Promise<string>
   // should be triggered by other contract, use for testing
@@ -335,13 +279,13 @@ export const CW3Flex = (client: SigningCosmWasmClient, fees: Options['fees']): C
       return client.queryContractSmart(contractAddress, {list_voters: {start_after: startAfter, limit}});
     }
 
-    const propose = async (txSigner: string, description: string, msgs: CosmosMsg[], latest?: Expiration): Promise<string> => {
-      const result = await client.execute(txSigner, contractAddress, {propose: {description, msgs, latest}}, fees.exec);
+    const propose = async (txSigner: string, title: string, description: string, msgs: any[], latest?: Expiration): Promise<string> => {
+      const result = await client.execute(txSigner, contractAddress, {propose: {title, description, msgs, latest}}, fees.exec);
       return result.transactionHash;
     }
 
-    const vote = async (txSigner: string, proposalId: number, vote: Vote): Promise<string> => {
-      const result = await client.execute(txSigner, contractAddress, {vote: {proposal_id: proposalId, vote}}, fees.exec);
+    const vote = async (txSigner: string, proposalId: number, vote: string): Promise<string> => {
+      const result = await client.execute(txSigner, contractAddress, {vote: {proposal_id: proposalId, vote: vote}}, fees.exec);
       return result.transactionHash;
     }
 

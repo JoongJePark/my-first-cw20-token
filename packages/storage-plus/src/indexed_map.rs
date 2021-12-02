@@ -694,9 +694,9 @@ mod test {
         let count = marias.len();
         assert_eq!(2, count);
 
-        // Pks (sorted by age descending)
-        assert_eq!(pk1, marias[0].0);
-        assert_eq!(pk3, marias[1].0);
+        // Remaining of the index key, along with the pk (sorted by age descending)
+        assert_eq!((42u32, pk1).joined_key(), marias[0].0);
+        assert_eq!((24u32, pk3).joined_key(), marias[1].0);
 
         // Data
         assert_eq!(data1, marias[0].1);

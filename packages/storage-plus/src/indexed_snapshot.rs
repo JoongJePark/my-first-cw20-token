@@ -681,7 +681,7 @@ mod test {
         let count = marias.len();
         assert_eq!(2, count);
 
-        // Remaining of the index key, along with the pk (sorted by age descending)
+        // Remaining of the index key (age), along with the pk, sorted by age descending
         assert_eq!((42u32, pk1).joined_key(), marias[0].0);
         assert_eq!((24u32, pk3).joined_key(), marias[1].0);
 
@@ -891,11 +891,23 @@ mod test {
         let count = ages.len();
         assert_eq!(4, count);
 
-        // The pks, sorted by age ascending
-        assert_eq!(pks[3].as_bytes(), ages[0].0);
-        assert_eq!(pks[1].as_bytes(), ages[1].0);
-        assert_eq!(pks[2].as_bytes(), ages[2].0);
-        assert_eq!(pks[0].as_bytes(), ages[3].0);
+        // Index keys (u32 be bytes), plus pks (bytes) (sorted by age descending)
+        assert_eq!(
+            (12u32.to_be_bytes().to_vec(), pks[3].to_string()).joined_key(),
+            ages[0].0
+        ); // 12
+        assert_eq!(
+            (23u32.to_be_bytes().to_vec(), pks[1].to_string()).joined_key(),
+            ages[1].0
+        ); // 23
+        assert_eq!(
+            (32u32.to_be_bytes().to_vec(), pks[2].to_string()).joined_key(),
+            ages[2].0
+        ); // 32
+        assert_eq!(
+            (42u32.to_be_bytes().to_vec(), pks[0].to_string()).joined_key(),
+            ages[3].0
+        ); // 42
 
         // The associated data
         assert_eq!(datas[3], ages[0].1);
@@ -955,9 +967,9 @@ mod test {
         let count = marias.len();
         assert_eq!(2, count);
 
-        // The pks
-        assert_eq!(pks[0].as_bytes(), marias[0].0);
-        assert_eq!(pks[1].as_bytes(), marias[1].0);
+        // Remaining of the index keys (last name), plus pks, sorted by last name descending
+        assert_eq!(("Doe", pks[0].to_string()).joined_key(), marias[0].0);
+        assert_eq!(("Williams", pks[1].to_string()).joined_key(), marias[1].0);
 
         // The associated data
         assert_eq!(datas[0], marias[0].1);

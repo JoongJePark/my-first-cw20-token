@@ -893,27 +893,27 @@ mod test {
         let count = ages.len();
         assert_eq!(5, count);
 
-        // Index keys (u32 be bytes), plus pks, sorted by age descending
+        // Index key (age), plus pks, sorted by age descending
         assert_eq!(
             (12u32.to_be_bytes().to_vec(), pks[3].to_string()).joined_key(),
             ages[0].0
-        ); // 12
+        );
         assert_eq!(
             (23u32.to_be_bytes().to_vec(), pks[1].to_string()).joined_key(),
             ages[1].0
-        ); // 23
+        );
         assert_eq!(
             (32u32.to_be_bytes().to_vec(), pks[2].to_string()).joined_key(),
             ages[2].0
-        ); // 32
+        );
         assert_eq!(
             (42u32.to_be_bytes().to_vec(), pks[0].to_string()).joined_key(),
             ages[3].0
-        ); // 42
+        );
         assert_eq!(
             (90u32.to_be_bytes().to_vec(), pks[4].to_string()).joined_key(),
             ages[4].0
-        ); // 90
+        );
 
         // The associated data
         assert_eq!(datas[3], ages[0].1);
@@ -941,12 +941,12 @@ mod test {
         let count = ages.len();
         assert_eq!(5, count);
 
-        // The pks, sorted by age ascending
-        assert_eq!(pks[3], ages[0].0);
-        assert_eq!(pks[1], ages[1].0);
-        assert_eq!(pks[2], ages[2].0);
-        assert_eq!(pks[0], ages[3].0);
-        assert_eq!(pks[4], ages[4].0);
+        // Index key (age), plus pks, sorted by age descending
+        assert_eq!((12u32, pks[3].to_string()), ages[0].0);
+        assert_eq!((23u32, pks[1].to_string()), ages[1].0);
+        assert_eq!((32u32, pks[2].to_string()), ages[2].0);
+        assert_eq!((42u32, pks[0].to_string()), ages[3].0);
+        assert_eq!((90u32, pks[4].to_string()), ages[4].0);
 
         // The associated data
         assert_eq!(datas[3], ages[0].1);
@@ -1005,9 +1005,9 @@ mod test {
         let count = marias.len();
         assert_eq!(2, count);
 
-        // The pks
-        assert_eq!(pks[0], marias[0].0);
-        assert_eq!(pks[1], marias[1].0);
+        // Remaining of the index keys (last name), plus pks, sorted by last name descending
+        assert_eq!(("Doe".into(), pks[0].to_string()), marias[0].0);
+        assert_eq!(("Williams".into(), pks[1].to_string()), marias[1].0);
 
         // The associated data
         assert_eq!(datas[0], marias[0].1);

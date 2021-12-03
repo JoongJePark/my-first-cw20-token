@@ -92,17 +92,17 @@ where
 fn deserialize_unique_v<T: DeserializeOwned>(kv: Record) -> StdResult<Record<T>> {
     let (k, v) = kv;
     let t = from_slice::<UniqueRef<T>>(&v)?;
-    // We return joined `(k, pk)` here, to be consistent with `MultiIndex` behaviour
+    // We return raw / joined `(k, pk)` here, to be consistent with `MultiIndex`
     Ok(((k, t.pk.0).joined_key(), t.value))
 }
 
 fn deserialize_unique_kv<K: KeyDeserialize, T: DeserializeOwned>(
     kv: Record,
 ) -> StdResult<(K::Output, T)> {
-    let (_, v) = kv;
+    let (k, v) = kv;
     let t = from_slice::<UniqueRef<T>>(&v)?;
-    // FIXME: Return `k` deserialization here instead of `t.pk` (be consistent with `deserialize_multi_kv` and `Map` behaviour)
-    Ok((K::from_vec(t.pk.to_vec())?, t.value))
+    // We return `(k, pk)` here, to be consistent with `MultiIndex`
+    Ok((K::from_vec((k, t.pk.0).joined_key())?, t.value))
 }
 
 impl<'a, K, T, PK> UniqueIndex<'a, K, T, PK>
@@ -174,12 +174,13 @@ where
     }
 }
 
+#[allow(clippy::type_complexity)]
 #[cfg(feature = "iterator")]
 impl<'a, K, T, PK> UniqueIndex<'a, K, T, PK>
 where
     PK: PrimaryKey<'a> + KeyDeserialize,
     T: Serialize + DeserializeOwned + Clone,
-    K: PrimaryKey<'a>,
+    K: PrimaryKey<'a> + KeyDeserialize,
 {
     /// While `range_de` over a `prefix_de` fixes the prefix to one element and iterates over the
     /// remaining, `prefix_range_de` accepts bounds for the lowest and highest elements of the
@@ -212,9 +213,10 @@ where
         min: Option<Bound>,
         max: Option<Bound>,
         order: cosmwasm_std::Order,
-    ) -> Box<dyn Iterator<Item = StdResult<(PK::Output, T)>> + 'c>
+    ) -> Box<dyn Iterator<Item = StdResult<((K::Output, PK::Output), T)>> + 'c>
     where
         T: 'c,
+        K::Output: 'static,
         PK::Output: 'static,
     {
         self.no_prefix_de().range_de(store, min, max, order)
@@ -226,29 +228,30 @@ where
         min: Option<Bound>,
         max: Option<Bound>,
         order: cosmwasm_std::Order,
-    ) -> Box<dyn Iterator<Item = StdResult<PK::Output>> + 'c>
+    ) -> Box<dyn Iterator<Item = StdResult<(K::Output, PK::Output)>> + 'c>
     where
         T: 'c,
+        K::Output: 'static,
         PK::Output: 'static,
     {
         self.no_prefix_de().keys_de(store, min, max, order)
     }
 
-    pub fn prefix_de(&self, p: K::Prefix) -> Prefix<PK, T> {
+    pub fn prefix_de(&self, p: K::Prefix) -> Prefix<(K::Suffix, PK), T> {
         Prefix::with_deserialization_function(self.idx_namespace, &p.prefix(), &[], |_, _, kv| {
-            deserialize_unique_kv::<PK, _>(kv)
+            deserialize_unique_kv::<(K::Suffix, PK), _>(kv)
         })
     }
 
-    pub fn sub_prefix_de(&self, p: K::SubPrefix) -> Prefix<PK, T> {
+    pub fn sub_prefix_de(&self, p: K::SubPrefix) -> Prefix<(K::SuperSuffix, PK), T> {
         Prefix::with_deserialization_function(self.idx_namespace, &p.prefix(), &[], |_, _, kv| {
-            deserialize_unique_kv::<PK, _>(kv)
+            deserialize_unique_kv::<(K::SuperSuffix, PK), _>(kv)
         })
     }
 
-    fn no_prefix_de(&self) -> Prefix<PK, T> {
+    fn no_prefix_de(&self) -> Prefix<(K, PK), T> {
         Prefix::with_deserialization_function(self.idx_namespace, &[], &[], |_, _, kv| {
-            deserialize_unique_kv::<PK, _>(kv)
+            deserialize_unique_kv::<(K, PK), _>(kv)
         })
     }
 }
